@@ -1,0 +1,33 @@
+version: '3.7'
+
+# volumes:
+#   result:
+
+services:
+  postgres:
+    image: postgres:14.6-alpine
+    healthcheck:
+      test: ["CMD", "nc", "-zv", "localhost", "5432"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - 5432:5432
+  python:
+      build:
+        context: ./python
+      volumes:
+        - ./result:/home/python/result
+      environment:
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        ACCESS_TOKEN: ${ACCESS_TOKEN}
+      command: ["python3", "mmain.py", "$POSTGRES_USER", "$POSTGRES_PASSWORD", "postgres", "$ACCESS_TOKEN"]
+      tty: true
+      depends_on:
+        - postgres
